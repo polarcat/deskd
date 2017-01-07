@@ -1,0 +1,53 @@
+#!/bin/sh
+
+screen=''
+
+addtag_()
+{
+	local n=0
+
+	while [ $n -lt $maxtags_ ]; do
+		if [ ! -d $yawm_/$screen/tags/$n ]; then
+			trace_ "add $yawm_/$screen/tags/$n"
+			mkdir $yawm_/$screen/tags/$n
+			echo -n "$n" > $yawm_/$screen/tags/$n/.name
+			break
+		fi
+		n=$((n + 1))
+	done
+}
+
+modtags_()
+{
+	local i=0
+	local changed=0
+
+	shift 1
+	getval_ '=' $1; screen=$val_
+	shift 1
+
+	for arg in $@; do
+		getvar_ '.' $arg; cmdvar=$var_
+		getval_ '.' $arg; cmdval=$val_
+		getvar_ '=' $arg; var=$var_
+		getval_ '=' $arg; val=$val_
+		trace_ "arg $arg"
+		trace_ "cmdvar: $cmdvar, cmdval: $cmdval, var: $var, val: $val"
+		if [ -n "$cmdvar" -a -n "$cmdval" ]; then
+			trace_ "delete $yawm_/$screen/tags/$cmdvar"
+			rm -vfr $yawm_/$screen/tags/$cmdvar 1>&2
+			changed=1
+		elif [ -n "$var" -a "$var" = "newtag" ]; then
+			addtag_
+			changed=1
+		elif [ -n "$val" ]; then
+			trace_ "$val --> $yawm_/$screen/tags/$var/.name"
+			echo -n "$val" > $yawm_/$screen/tags/$var/.name
+			changed=1
+		fi
+	done
+
+	if [ $changed -eq 1 ]; then
+		xsetroot -name "refresh-panel $screen"
+	fi
+}

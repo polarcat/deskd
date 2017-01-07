@@ -1,0 +1,13 @@
+#!/bin/sh
+
+getopt_ "dev" $args_; dev=$val_
+getopt_ "addr" $args_; address=$val_
+getopt_ "mask" $args_; netmask=$val_
+getopt_ "gw" $args_; gateway=$val_
+getopt_ "dhcp" $args_; dhcp=$val_
+
+if [ "$dhcp" = "on" ]; then
+	sudo ifsetup $dev dhcp 1>&2
+else
+	sudo ifsetup $dev $address $netmask $gateway 1>&2
+fi

@@ -1,0 +1,38 @@
+#!/bin/sh
+
+getopt_ "dev" $args_
+dev=$val_
+
+getopt_ "username" $args_
+net=$val_
+
+getopt_ "key" $args_
+key=$val_
+
+err=$tmp_/${net}.err
+nok=1
+
+trace_ "PARAMS: $dev $net $key"
+trace_ "ERR: $err"
+
+sudo iwsetup $net $key >$err 2>&1
+sudo ifdown $dev >>$err 2>$1
+sudo ifup $dev >>$err 2>&1
+
+for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+	if ! sudo wpa_cli status >>$err 2>&1; then
+		break
+	else
+		while read line; do
+			if [ "$line" = "wpa_state=COMPLETED" ]; then
+				nok=0
+			fi
+		done < $err
+
+		if [ $nok -eq 0 ]; then
+			break
+		fi
+	fi
+
+	sleep 1
+done

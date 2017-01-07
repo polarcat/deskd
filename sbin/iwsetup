@@ -1,0 +1,48 @@
+#!/bin/sh
+#
+# wpa supplicant configurator
+
+base=/etc/wpa_supplicant
+app=$(basename $0)
+
+help()
+{
+	echo "Usage: $app <params>"
+	echo "Params:"
+	echo "  'default'         apply $base/default.conf"
+	echo "  <ssid> <password> create and apply new configuration"
+}
+
+setup()
+{
+	local cur=current.conf
+
+	mkdir -p configs
+	if ! wpa_passphrase "$1" "$2" > configs/$1.conf; then
+		return
+	fi
+	chmod 0600 configs/"$1".conf
+
+	echo "ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=wheel" > $cur
+	chmod 0600 $cur
+	cat configs/$1.conf >> $cur
+	for conf in configs/*.conf; do
+		if [ "$conf" = "configs/$1.conf" ]; then
+			continue
+		fi
+		cat $conf >> $cur
+	done
+}
+
+if [ $# -eq 0 ]; then
+	help
+elif [ "$1" = "default" ]; then
+	cd $base
+	ln -sf default.conf wpa_supplicant.conf
+	/etc/init.d/wpa_supplicant restart
+else
+	cd $base
+	setup "$1" "$2"
+	ln -sf current.conf wpa_supplicant.conf
+	/etc/init.d/wpa_supplicant restart
+fi

@@ -1,0 +1,132 @@
+#!/bin/sh
+
+ip4addr_='-'
+
+hex2ip4_()
+{
+	ip4addr_=''
+	ip4addr_=$((0x$1 >> 24))
+	ip4addr_=$((0x$1 >> 16 & 0xff)).$ip4addr_
+	ip4addr_=$((0x$1 >> 8 & 0xff)).$ip4addr_
+	ip4addr_=$((0x$1 & 0xff)).$ip4addr_
+}
+
+gateway_='-'
+
+getgway_()
+{
+	while read dev dest gw rest; do
+		if [ "$dev" = "$1" -a "00000000" = "$dest" ]; then
+			hex2ip4_ $gw
+			gateway_=$ip4addr_
+			return
+		fi
+	done < /proc/net/route
+}
+
+address_='-'
+netmask_='-'
+broadcast_='-'
+
+getaddr_()
+{
+	address_='-'
+	netmask_='-'
+	broadcast_='-'
+
+	getip $1 > $tmp_/$1.ip4 2>/dev/null
+
+	while read ip mask bcast hw; do
+		address_=$ip
+		netmask_=$mask
+		broadcast_=$bcast
+	done < $tmp_/$1.ip4
+}
+
+dynamic_=0
+
+getconf_()
+{
+	local details=0
+
+	dynamic_=0
+	address_='-'
+	gateway_='-'
+	netmask_='-'
+
+	while read key0 key1 key2 key3; do
+		line="$key0 $key1 $key2 $key3"
+		case "$line" in
+		iface*$iface*dhcp)
+			dynamic_=1
+			getaddr_ $key1
+			break
+			;;
+		iface*$iface*static) details=1;;
+		address*)
+			if [ $details -eq 1 ]; then
+				address_=$key1
+			else
+				address_='-'
+			fi
+			;;
+		netmask*)
+			if [ $details -eq 1 ]; then
+				netmask_=$key1
+			fi
+			;;
+		gateway*)
+			if [ $details -eq 1 ]; then
+				gateway_=$key1
+			fi
+			;;
+		esac
+	done < /etc/network/interfaces
+}
+
+network_=error
+
+getssid_()
+{
+	local state=''
+
+	network_=error
+
+	if ! sudo wpa_cli status >$1 2>&1; then
+		network_=error
+		return
+	fi
+
+	while read line; do
+		case $line in
+		ssid=*) getval_ '=' $line; network_=$val_;;
+		wpa_state=*) getval_ '=' $line; state=$val_;;
+		esac
+	done < $1
+
+	if [ "$state" != "COMPLETED" ]; then
+		network_="down"
+	fi
+}
+
+isconn_()
+{
+	local devstate=/sys/class/net/$1/operstate
+
+	while read dev dest rest; do
+		if [ "$dev" = "$1" -a "00000000" != "$dest" ]; then
+			if [ ! -f $devstate ]; then
+				return 0
+			fi
+			while read state; do
+				if [ "$state" = "up" ]; then
+					return 0
+				else
+					return 1
+				fi
+			done < $devstate
+		fi
+	done < /proc/net/route
+
+	return 1
+}

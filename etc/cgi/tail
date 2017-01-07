@@ -1,0 +1,5 @@
+#!/bin/sh
+
+echo '</div>
+</body>
+</html>'

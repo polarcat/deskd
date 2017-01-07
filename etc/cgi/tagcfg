@@ -1,0 +1,50 @@
+#!/bin/sh
+
+menu_="tagcfg tags"
+. $cgi_/menu
+
+echo "<table class=blank>"
+for scr in $(ls -1 ~/.yawm); do
+        case "$scr" in
+        [0-9])
+	echo "<form action=cgi>
+<input name=cmd type=hidden value=tagcfg>
+<input name=scr type=hidden value=$scr>
+<tr><td class=para>${sym1_}screen $scr</td></tr>
+<tr><td><br></td></tr>
+<tr><td>
+<table class=legend style=border-spacing:4px;>"
+	for i in $(ls -1 $yawm_/$scr/tags/); do
+		tag=$(cat $yawm_/$scr/tags/$i/.name)
+		echo "<tr>
+<td>
+<div class=input>
+<input type=text style=border:none; name=$i value=$tag>
+<button class=symbol style=border:none; type=reset value=reset>&#xf0e2;&nbsp;</button>
+</div>
+</td>
+<td>
+<div class=checkbox title='mark for deletion'>
+<input type=checkbox id=trash$scr$i name=$i.del hidden>
+<label for=trash$scr$i>&nbsp;&#xf014;&nbsp;</label>
+</div>
+</td>
+</tr>"
+	done
+	echo '</table>
+</td>
+</tr>
+<tr>
+<td>
+<input class=symbol type=submit value=&#xf067; name=newtag title="new tag">
+<input class=symbol type=submit value=&#xf0c7; title="apply canges">
+</td>
+</tr>
+</form>
+<tr><td><br></td></tr>'
+	;;
+	esac
+done
+echo '</table>'
+
+. $cgi_/tail

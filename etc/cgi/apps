@@ -1,0 +1,80 @@
+#!/bin/sh
+
+# FIXME: use $XDG_DATA_DIRS variable
+appsdir=/usr/share/applications
+w=24
+h=24
+color1="#f8f8f8"
+color2="#101010"
+
+mkdir -p files/icons
+
+menu_="apps apps"
+. $cgi_/menu
+
+echo "<table id=apps>"
+
+ls -1 $appsdir/*.desktop | while read file; do
+	i=$((i + 1))
+	while read entry; do
+		case "$entry" in
+		Name=*) getval_ '=' $entry; name=$val_;;
+		Comment=*) getval_ '=' $entry; comment=$val_;;
+		Exec=*) getval_ '=' $entry; cmd=$val_;;
+#		$(getval_ '=' $entry); cmd=$(getvar_ ' ' $tmp);;
+		Terminal=*) getval_ '=' $entry; term=$val_;;
+		Type=*) getval_ '=' $entry; type=$val_;;
+		Icon=*) getval_ '=' $entry; icon=$val_;;
+		Categories=*) getval_ '=' $entry; categ=$val_;;
+		esac
+	done < $file
+	if [ $((i % 2)) -eq 0 ]; then
+		style=''
+		bgcolor="transparent"
+	else
+		style="style=background-color:$color1;"
+		bgcolor="$color1"
+	fi
+
+	if [ -f files/icons/$icon-alt.png ]; then
+		image=files/icons/$icon-alt.png
+	elif [ -f files/icons/$icon.png ]; then
+		image=files/icons/$icon.png
+	elif [ -f files/icons/$icon.xpm ]; then
+		image=files/icons/$icon.xpm
+	else
+		dirs="/usr/share/icons /usr/share/pixmaps/"
+#		image=$(find $dirs -name $icon.* | grep "$wx$h")
+		image=$(find $dirs -name $icon.* | tail -1)
+		if [ -z "$image" ]; then
+			image=files/icons/application.png
+		else
+			cp $image files/icons/
+			image=files/icons/$(basename $image)
+		fi
+	fi
+	if [ "$term" = "true" ]; then
+		arg="term"
+	else
+		arg=''
+	fi
+
+	echo "<tr $style>
+<td>
+<form action=cgi? method=post>
+<button class=framed title='run command' type=submit name=post.run.$cmd value=$arg>
+<table class=button>
+<tr>
+<td><img class=icon src=/$image></td>
+<td>$cmd</td>
+</tr>
+</table>
+</button>
+</form>
+</td>
+<td>$name (<a href=cgi?cache=$file title='show details'>$comment</a>)</td>
+</tr>"
+done
+echo '</table>'
+
+. $cgi_/tail

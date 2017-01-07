@@ -1,0 +1,44 @@
+#!/bin/sh
+
+menu_="netcfg netstat"
+. $cgi_/menu
+
+echo "<table class=blank>
+<tr>
+<td class=para>
+<a class=menu href=cgi?netcfg><div class=para>${sym4_}connections</div></a>
+</td>
+</tr>
+<tr>
+<td>
+<table class=legend>
+<tr><td><br></td></tr>
+<tr>
+<td class=info>proto</td>
+<td class=info>local</td>
+<td class=info>remote</td>
+<td class=info>state</td>
+<td class=info>program</td>
+</tr>"
+row_=0
+netstat -a -n -p | while read proto rq sq laddr raddr state pid; do
+	if [ -z "$pid" ]; then
+		pid='-'
+	fi
+	case "$proto" in
+	tcp|udp)
+		alter_
+		echo "<tr>
+<td $class_>$proto</td>
+<td $class_>$laddr</td>
+<td $class_>$raddr</td>
+<td $class_>$state</td>
+<td $class_>$pid</td>
+</tr>"
+		;;
+	esac
+done
+echo '</table>
+</table>'
+
+. $cgi_/tail

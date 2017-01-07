@@ -1,0 +1,57 @@
+#!/bin/sh
+
+arg1=''
+arg2=''
+
+getopt() { arg1=$1; arg2=$2; }
+getopt $menu_
+
+. $cgi_/head "$arg2"
+
+list="home:home
+|apps:apps
+|wincfg:wins
+|scrcfg:screens
+|tagcfg:tags
+|netcfg:network"
+
+echo '</head>
+<body>
+<header>
+<div class=menu>
+<table class=blank>
+<tr>'
+if [ "$arg1" = "home" ]; then
+	style='style=color:#444;'
+fi
+echo "<td class=blank>
+<span>&nbsp;</span>
+<a class=home $style href=cgi?home>&#xf015;</a>
+<span>&nbsp;</span>
+</td>
+<td>
+<ul class=menu>"
+ifs=$IFS
+IFS='|'
+for item in $list; do
+	getvar_ ':' $item
+	tag=$var_
+	getval_ ':' $item
+	val=$val_
+	if [ "$tag" = "home" ]; then
+		continue
+	fi
+	if [ "$arg1" = "$tag" -a "$tag" != "home" ]; then
+		class="active"
+	else
+		class="menu"
+	fi
+	echo "<li class=$class><a href=cgi?$tag>$val</a></li>"
+done
+IFS=$ifs
+echo '</ul>
+</td>
+</tr>
+</table>
+</div>
+</header><div style=margin:8px>'

@@ -1,0 +1,111 @@
+#!/bin/sh
+
+menu_="netcfg interface"
+. $cgi_/menu
+. $lib_/libnet
+
+inattr="size=15 maxlength=15 class=ip4"
+
+scan=0
+
+getopt_ "dev" $args_
+iface=$val_
+
+getopt_ "scan" $args_
+param=$val_
+
+alter_
+
+echo "
+<table class=blank>
+<tr><td class=para>
+<a class=menu href=cgi?netcfg><div class=para>${sym4_}edit</div></a>
+</td></tr>
+<tr><td><br></td></tr>
+<tr>
+<td>
+<table class=legend>
+<tr>
+<td class=info>interface</td>
+<td class=info>address</td>
+<td class=info>netmask</td>
+<td class=info>gateway</td>
+<td class=info title='dynamic address'>dhcp</td>
+<td class=info></td>
+<td class=info></td>
+<td class=info></td>
+</tr>"
+
+getconf_ $iface
+
+if [ "$gateway_" = "-" ]; then
+	getgway_ $iface
+fi
+
+if [ -d /sys/class/net/$iface/wireless ]; then
+	getssid_ $tmp_/wlan-status.txt
+	devicon='&#xf1eb'
+	if [ -n "$param" -a "$param" = "1" ]; then
+		scan=2
+	else
+		scan=1 # just show scan button
+	fi
+else
+	network_=''
+	devicon='&#xf0e8'
+fi
+
+if [ $dynamic_ -eq 1 ]; then
+	checked=checked
+else
+	checked=''
+fi
+
+selstyle="style=font-family:helvetica,fontawesome;"
+
+if isconn_ $iface; then
+	selstyle=$selstyle"color:#568250;font-weight:bold;"
+else
+	selstyle=$selstyle"color:#333;"
+fi
+
+echo "<tr>
+<td $class_><span $selstyle>$devicon&nbsp;&nbsp;$iface</span></td>
+<form action=cgi>
+<input type=hidden name=cmd value=ifsave>
+<input type=hidden name=dev value=$iface>
+<td $class_><input $inattr name=addr value='$address_'></td>
+<td $class_><input $inattr name=mask value='$netmask_'></td>
+<td $class_><input $inattr name=gw value='$gateway_'></td>
+<td $class_><input type=checkbox name=dhcp $checked></td>
+<td $class_ style=text-align:center;>
+<input class=symbol type=submit value=&#xf0c7; title=save>
+</td>
+</form>"
+
+if [ $scan -eq 0 ]; then
+	echo '<td></td>'
+else
+	echo "<form action=cgi>
+<input type=hidden name=cmd value=ifcfg>
+<input type=hidden name=dev value=$iface>
+<input type=hidden name=scan value=1>
+<td>
+<button class=symbol type=submit title=scan>&#xf021</button>
+</td>
+</form>"
+fi
+
+echo "<td $class_><span $selstyle>$network_</span></td>
+</tr>
+</table>
+</td>
+</tr>"
+
+if [ $scan -eq 2 ]; then
+	. $cgi_/wlancfg
+fi
+
+echo '</table>'
+
+. $cgi_/tail

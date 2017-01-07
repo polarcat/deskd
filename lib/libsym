@@ -1,0 +1,12 @@
+#/bin/sh
+
+#sym1_="&#xf0d7;&nbsp;"
+#sym2_="&#xf0d9;&nbsp;"
+#sym3_="&nbsp;&#xf064;"
+#sym4_="&#xf112;&nbsp;"
+
+sym1_="&nbsp;"
+#sym1_="&#xf107;&nbsp;"
+sym2_="&#xf107;&nbsp;"
+sym3_="&nbsp;&#xf105;"
+sym4_="&nbsp;&#xf104;&nbsp;"

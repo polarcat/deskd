@@ -1,0 +1,74 @@
+#!/bin/sh
+
+base_=$HOME/.deskd
+cgi_=$base_/etc/cgi
+lib_=$base_/lib
+yawm_=~/.yawm
+maxtags_=255
+
+export PATH=$PATH:$HOME/.deskd/sbin
+
+trace_()
+{
+	echo "$@" >&2
+}
+
+var_=''
+getvar__() { var_=$1; }
+getvar_() { local ifs=$IFS; IFS=$1; shift 1; getvar__ $@; IFS=$ifs; }
+
+val_=''
+getval__() { val_=$2; }
+getval_() { local ifs=$IFS; IFS=$1; shift 1; getval__ $@; IFS=$ifs; }
+
+index__()
+{
+	local n="$1"
+	local i=0
+	shift 1
+	while [ $# -ne 0 ]; do
+		i=$((i + 1))
+		if [ $i -eq $n ]; then
+			echo $1
+			break
+		fi
+		shift 1
+	done
+}
+
+index_() { local ifs=$IFS; IFS=$1; shift 1; index__ $@; IFS=$ifs; }
+
+row_=0
+class_=''
+alter_()
+{
+	row_=$((row_ + 1))
+	if [ $(($row_ % 2)) -eq 0 ]; then
+		class_="class=even"
+	else
+		class_="class=odd"
+	fi
+}
+
+getopt_()
+{
+	local name=$1
+	local ifs=$IFS
+
+	var_=''
+	val_=''
+	shift 1
+	while [ $# -ne 0 ]; do
+		getvar_ '=' $1
+		getval_ '=' $1
+		if [ "$var_" = "$name" ]; then
+			return
+		fi
+		shift 1
+	done
+	val_=''
+}
+
+str_=''
+split__() { while [ $# -ne 0 ]; do str_="$str_$1 "; shift 1; done; }
+split_() { local ifs=$IFS; IFS=$1; shift 1; split__ $@; IFS=$ifs; }

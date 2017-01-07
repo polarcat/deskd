@@ -1,0 +1,94 @@
+#!/bin/sh
+#
+# /etc/network/interfaces configurator
+
+app=$(basename $0)
+tmp=/tmp/$USER/interfaces.new
+
+mkdir -p /tmp/$USER
+
+help()
+{
+	echo "Usage: $app <dev> <params>"
+	echo "Params:"
+	echo "  'dhcp'                          dynamic address"
+	echo "  'wpa' <ssid> <key>              wireless WPA"
+	echo "  'wpe' <ssid> <key>              wireless WPE"
+	echo "  <address> <netmask> <gateway>   static configuration"
+}
+
+case "$@" in
+*dhcp) argc=2;;
+*wpa) argc=4;;
+*wpe) argc=4;;
+*) argc=4;;
+esac
+
+if [ $# -ne $argc ]; then
+	help
+	exit 0
+fi
+
+dev="$1"
+param1="$2"
+param2="$3"
+param3="$4"
+
+configure()
+{
+	if [ -z "$param1" ]; then
+		return
+	fi
+
+	if [ "$param1" = "dhcp" ]; then
+		echo "iface $dev inet dhcp"
+	elif [ "$param1" = "wpa" ]; then
+		echo "iface $dev inet dhcp"
+		echo "  wpa-ssid $param2"
+		echo "  wpa-psk $param3"
+	elif [ "$param1" = "wpe" ]; then
+		echo "iface $dev inet dhcp"
+		echo "  wireless-essid $param2"
+		echo "  wireless-key1 s:$param3"
+		echo "  wireless-defaultkey 1"
+		echo "  wireless-keymode open"
+	else
+		echo "iface $dev inet static"
+		echo "  address $param1"
+		echo "  netmask $param2"
+		echo "  gateway $param3"
+	fi
+}
+
+printf "auto lo\niface lo inet loopback\n" > $tmp
+
+cfg=/etc/network/interfaces
+found=0
+while read key iface inet params; do
+	if [ "$key" = "auto" -a "$iface" = "lo" ]; then
+		continue
+	elif [ "$key" = "iface" -a "$iface" = "lo" ]; then
+		continue
+	elif [ "$key" = "iface" -a "$iface" = "$dev" ]; then
+		found=1
+	elif [ "$tag$key" = "iface" -a "$iface" != "$dev" ]; then
+		found=0
+	elif [ "$key" = '' ]; then # end of interface block
+		found=0
+	fi
+
+	if [ $found -eq 0 ]; then
+		echo "$key $iface $inet $params" >> $tmp
+	elif [ -n "$params" -a "$params" = "manual" ]; then
+		# don't touch manually configured interfaces
+		argc=0
+		echo "$key $iface $inet $params" >> $tmp
+	fi
+done < $cfg
+
+if [ $argc -gt 0 ]; then
+	configure >> $tmp
+fi
+
+cp -v $cfg $cfg.bak
+cp -v $tmp $cfg

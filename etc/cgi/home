@@ -1,0 +1,328 @@
+#!/bin/sh
+
+mempct()
+{
+	free | while read name total used rest; do
+		if [ "$name" = "$1" ]; then
+			case $used in
+			[0-9]*) echo "$(($used * 100 / $total))";;
+			esac
+		fi
+	done
+}
+
+rxtx()
+{
+	while [ $# -ne 0 ]; do
+		case $1 in
+		"("*) echo "$@"; return 0;;
+		esac
+		shift 1
+	done
+	echo "-"
+}
+
+menu_="home home"
+. $cgi_/menu
+
+echo "<table class=blank>
+<tr>
+<td>
+<span class=home style=font-size:160%;>&#xf0c0;&nbsp;&nbsp</span>
+<span style=color:#669260;font-family:mono;font-weight:bold;>"
+me=$(whoami)
+echo "&nbsp;$me&nbsp;</span>
+<span style=color:#86b280;font-family:mono;font-weight:bold;>"
+users=''
+busybox ps | while read pid user rest; do
+	if [ "$user" = "$me" ]; then
+		continue
+	elif [ "$pid" = "PID" ]; then
+		continue
+	fi
+
+	case "$users" in
+	*$user*) continue;;
+	esac
+	users="$users $user"
+	echo "&nbsp;$user&nbsp;"
+done
+echo "</span>
+</td>
+</tr>
+</table>
+<table class=blank>
+<tr>
+<td>
+<tr><td><br></td></tr>
+<tr><td><span class=mono>$(uptime)<br></span></td></tr>
+<tr><td><span class=mono>$(uname -a)<br></span></td></tr>
+<tr><td><br></td></tr>
+<tr><td class=para>${sym1_}system</td></tr>
+<tr><td><br></td></tr>
+<tr>
+<td>
+<table class=legend>
+<tr>
+<td class=info>cpu</td>
+<td class=info>MHz</td>
+<td class=info>cache</td>
+<td class=info>units</td>
+</tr>"
+
+norm() { var=$1; val=$2; }
+
+model=0
+models=''
+units=1
+ifs=$IFS
+IFS=':'
+while read var val; do
+        case $var in
+        "model name"*)
+                eval "cpurow$model='<td>$val</td>'"
+                ;;
+        "model"*)
+		IFS=$ifs; norm $var $val; IFS=':'
+                if [ "$model" = "$val" ]; then
+                        units=$((units + 1))
+                else
+			models="$models:$val"
+                        units=1
+                fi
+		model=$val
+                ;;
+        "cpu MHz"*)
+                eval "cpurow$model=\$cpurow$model'<td>$val</td>'"
+                ;;
+        "cache size"*)
+                eval "cpurow$model=\$cpurow$model'<td>$val</td><td>$units</td>'"
+                ;;
+        esac
+done < /proc/cpuinfo
+IFS=':'
+for model in $models; do
+	if [ -z "$model" ]; then
+		continue
+	fi
+	eval "echo '<tr>'\$cpurow$model'</tr>'"
+done
+IFS=$ifs
+echo "</table>
+</td>
+</tr>
+<tr><td><br></td></tr>
+<tr><td class=para>${sym1_}memory</td></tr>
+<tr><td><br></td></tr>
+<tr>
+<td>
+<table class=legend>"
+row_=0
+free | while read title total used free share cache available; do
+	echo -n "<tr>"
+	case $title in
+	total) class_="class=info"; pct=200;;
+	Mem:) pct=$(mempct "Mem:");;
+	Swap:) pct=$(mempct "Swap:");;
+	-/+) continue;;
+	*) pct=100;;
+	esac
+
+	if [ $pct -gt 100 ]; then # print title
+		class_="class=info"
+		echo "<td $class_></td>"
+	else
+		alter_
+	fi
+
+	echo "<td $class_>$title</td>
+<td $class_>$total</td>
+<td $class_>$used</td>
+<td $class_>$free</td>
+<td $class_>$share</td>
+<td $class_>$cache</td>
+<td $class_>$available</td>"
+	if [ $pct -gt 100 ]; then # complete title
+		echo "</tr>"
+		continue
+	fi
+	cur=$((pct / 10))
+	ch=$((10 - cur))
+	if [ $ch -eq 10 ]; then
+		ch=a
+	fi
+	bg="#$ch$ch$ch"
+	echo -n "<td $class_ style=color:$bg;>"
+	n=0
+	while [ $n -lt $cur ]; do
+		echo -n "&#9632;"
+		n=$((n + 1))
+	done
+	while [ $cur -lt 10 ]; do
+		echo -n "&#9633;"
+		cur=$((cur + 1))
+	done
+	echo "&nbsp;$pct%</td></tr>"
+done
+echo "</table>
+</td>
+</tr>
+<tr><td><br></td></tr>
+<tr><td class=para>${sym1_}storage</td></tr>
+<tr><td><br></td></tr>
+<tr>
+<td>
+<table class=legend>"
+row_=0
+df -h | while read fs size used avail use rest; do
+	i=$((i + 1))
+	if [ $i -eq 1 ]; then
+		class_="class=info"
+	else
+		alter_
+	fi
+	echo "<tr>
+<td $class_>$fs</td>
+<td $class_>$size</td>
+<td $class_>$used</td>
+<td $class_>$avail</td>
+<td $class_>$rest</td>"
+	if [ $i -eq 1 ]; then
+		echo "<td $class_>$use</td>"
+	else
+		if [ -n "$use" ]; then
+			getvar_ '%' $use
+			pct=$var_
+		fi
+
+		if [ -z "$pct" ]; then
+			pct=0
+		fi
+
+		cur=$(($pct / 10))
+		ch=$((10 - cur))
+		if [ $ch -eq 10 ]; then
+			ch=a
+		fi
+		bg="#$ch$ch$ch"
+		echo -n "<td $class_ style=color:$bg;>"
+		n=0
+		while [ $n -lt $cur ]; do
+			echo -n "&#9632;"
+			n=$((n + 1))
+		done
+		while [ $cur -lt 10 ]; do
+			echo -n "&#9633;"
+			cur=$((cur + 1))
+		done
+		echo "&nbsp;$use</td>"
+	fi
+echo "</tr>"
+done
+echo "</table>
+<tr><td><br></td></tr>
+<tr><td class=para>${sym1_}processes</td></tr>
+<tr><td><br></td></tr>
+</table>"
+
+color=''
+usagecolor()
+{
+	local pct=0
+	local bg=''
+	local fg=''
+
+	if [ -n "$1" ]; then
+		pct=$1
+	fi
+
+	if [ $pct -le 10 ]; then
+		color=''
+		return
+	elif [ $pct -gt 10 ] && [ $pct -le 30 ]; then
+		fg="#222"
+		bg="#dda0a0"
+	elif [ $pct -gt 30 ] && [ $pct -le 50 ]; then
+		fg="#222"
+		bg="#dd8080"
+	elif [ $pct -gt 50 ] && [ $pct -le 70 ]; then
+		bg="#666"
+		bg="#dd6060"
+	else
+		fg="#888"
+		bg="#dd4040"
+	fi
+	color="style=background-color:$bg;color:$fg;"
+}
+
+row=0
+list=0
+flag=0
+havecpu=0
+busybox top -n 1 -b | while read pid ppid user stat vsz vszpct cpu cpupct cmd; do
+	if [ "$cpu" = "CPU" ]; then
+		havecpu=1
+	fi
+
+	if [ $havecpu -eq 1 ]; then
+		cpu=$cpu" "
+	else
+		cmd="$cpupct$cmd"
+		cpupct=$cpu
+		cpu=''
+	fi
+
+	if [ "$pid" = "PID" ]; then
+		echo "<br><table class=legend>"
+		class_="class=info"
+		list=1
+	elif [ "$pid" != "PID" -a $list -eq 0 ]; then
+		echo "$pid $ppid $user $stat $vsz $vszpct $cpu$cpupct $cmd<br>"
+		continue
+	elif [ $list -eq 0 ]; then
+		continue
+	fi
+
+	if [ $list -gt 1 ]; then
+		ifs=$IFS; IFS='%'
+		usagecolor $cpupct
+		IFS=$ifs
+		alter_
+		class_="$class_ $color"
+
+		if [ "$vsz" = "<" ]; then
+			stat="$stat&#60;"
+			flag=1
+		elif [ "$vsz" = "N" ]; then
+			stat="${stat}N"
+			flag=1
+		fi
+
+		if [ $flag -eq 1 ]; then
+			vsz=$vszpct
+			vszpct=$cpupct
+			cpupct=$(index_ ' ' 1 $cmd)
+			cmd=$(index_ ' ' 2 $cmd)
+			flag=0
+		fi
+	fi
+
+	cmd="$(echo $cmd | sed 's/[<]/\&#60;/g;s/[>]/\&#62;/g;s/[[:blank:]]\+/\&nbsp;/g')"
+	echo "<tr>
+<td $class_>$pid</td>
+<td $class_>$ppid</td>
+<td $class_>$user</td>
+<td $class_>$stat</td>
+<td $class_>$vsz</td>
+<td $class_>$vszpct</td>"
+	if [ $havecpu -eq 1 ]; then
+		echo "<td $class_>$cpu</td>"
+	fi
+	echo "<td $class_>$cpupct</td>
+<td $class_>$cmd</td>"
+	list=$((list + 1))
+done
+echo '</tr>
+</table>'
+
+. $cgi_/tail

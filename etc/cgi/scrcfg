@@ -1,0 +1,35 @@
+#!/bin/sh
+
+menu_="scrcfg screens"
+. $cgi_/menu
+. $lib_/libnet
+
+xrandr > $tmp_/screens.txt
+
+# stick with 4 monitors for now
+
+echo '<table class=blank>'
+
+row=0
+list=''
+n=0
+while read name state rest; do
+	if [ "$state" = "connected" ]; then
+		list="$list $n:$name"
+		n=$((n + 1))
+	fi
+done < /tmp/screens.txt
+
+for item in $list; do
+	trace_ "ITEM: $item"
+done
+
+#	echo "<tr><td class=para>${sym1_}$name</td></tr>"
+#	echo "<tr>
+#<td>
+#<table class=legend>
+#<tr><td><br></td></tr>"
+#	echo '</table>'
+#echo '</table>'
+
+. $cgi_/tail

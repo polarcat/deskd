@@ -1,0 +1,198 @@
+#!/bin/sh
+
+menu_="netcfg network"
+. $cgi_/menu
+. $lib_/libnet
+
+cd /sys/class/net/
+echo "<table class=blank>
+<tr><td class=para>${sym1_}setup</td></tr>
+<tr><td><br></td></tr>
+<tr>
+<td>
+<table class=legend>
+<tr>
+<td class=info>interface</td>
+<td class=info>address</td>
+<td class=info>netmask</td>
+<td class=info>broadcast</td>
+<td class=info title='dynamic address'>dhcp</td>
+<td class=info></td>
+<td class=info></td>
+<td class=info></td>
+</tr>"
+row_=0
+for iface in *; do
+	type=0
+	read type < $iface/type
+	if [ $type -ne 1 ]; then
+		continue
+	fi
+
+	alter_
+
+	ifstatus=${iface}-status.txt
+	wlstatus=wlan-status.txt
+
+	echo '<tr>'
+
+	getconf_ $iface
+
+	if [ -d $iface/wireless ]; then
+		getssid_ $tmp_/$wlstatus
+		devicon='&#xf1eb'
+	else
+		read network_ < /sys/class/net/$iface/operstate
+		devicon='&#xf0e8'
+		wlstatus=$ifstatus
+	fi
+
+	ifconfig $iface > $tmp_/$ifstatus
+
+	if isconn_ $iface; then
+		devclass=online
+		title=disconnect
+		acticon="&#xf08b"
+		cmd=ifdown
+	else
+		devclass=offline
+		title=connect
+		acticon="&#xf090"
+		cmd=ifup
+		sudo ifdown $iface # clean up routes etc.
+	fi
+
+	if [ $dynamic_ -eq 1 ]; then
+		checked=checked
+	else
+		checked=''
+	fi
+
+	echo "<td $class_>
+<a class=menu href=$temp_/$ifstatus>
+<div class=$devclass>$devicon&nbsp;&nbsp;$iface&nbsp;&nbsp;</div>
+</a>
+</td>
+<td $class_>$address_&nbsp;&nbsp;</td>
+<td $class_>$netmask_&nbsp;&nbsp;</td>
+<td $class_>$broadcast_&nbsp;&nbsp;</td>
+<td $class_><input type=checkbox name=dhcp $checked disabled></td>
+<form action=cgi>
+<input type=hidden name=cmd value=ifcfg>
+<input type=hidden name=dev value=$iface>
+<td $class_>
+<input class=symbol type=submit value=&#xf040; title=edit>
+</td>
+</form>
+<form action=cgi>
+<input type=hidden name=cmd value=$cmd>
+<input type=hidden name=dev value=$iface>
+<td $class_>
+<input class=symbol type=submit value=$acticon; title=$title>
+</td>
+</form>
+<td $class_>
+<a class=menu href=$temp_/$wlstatus title=details>
+<div class=$devclass>$network_</div>
+</a>
+</td>
+</tr>"
+done
+
+echo "</table>
+</td>
+</tr>
+<tr><td><br></td></tr>
+<tr><td class=para>
+<a class=menu href=cgi?route title=details>
+<div class=para>${sym1_}route${sym3_}</div>
+</a>
+</td></tr>
+<tr><td><br></td></tr>
+<tr>
+<td>
+<table class=legend>
+<tr>
+<td class=info>interface</td>
+<td class=info>destination</td>
+<td class=info>gateway</td>
+<td class=info>netmask</td>
+</tr>"
+
+row_=0
+route()
+{
+	alter_
+
+	if isconn_ $iface; then
+		devclass=online
+	else
+		devclass=offline
+	fi
+
+	echo "<td $class_><div class=$devclass>$devicon&nbsp;&nbsp;$1</div></td>"
+	hex2ip4_ $2
+	echo "<td $class_>$ip4addr_</td>"
+	hex2ip4_ $3
+	echo "<td $class_>$ip4addr_</td>"
+	hex2ip4_ $8
+	echo "<td $class_>$ip4addr_</td>"
+}
+
+while read line; do
+	case "$line" in
+	Iface*Destination*) continue;;
+	esac
+	echo '<tr>'
+	route $line
+	echo '</tr>'
+done < /proc/net/route
+
+echo "</table>
+</td>
+</tr>
+<tr><td><br></td></tr>
+<tr><td class=para>
+<a class=menu href=cgi?netstat title=details>
+<div class=para>${sym1_}netstat${sym3_}</div>
+</a>
+</td></tr>
+<tr><td><br></td></tr>
+<tr>
+<td>
+<table class=legend>
+<tr>
+<td class=info></td>
+<td class=info>tcp addr</td>
+<td class=info>mac addr</td>
+<td class=info>received</td>
+<td class=info>transmitted</td>
+</tr>"
+row_=0
+while read iface line; do
+	case $iface in
+	Inter-*|*face*) continue;;
+	esac
+
+	alter_
+	getvar_ ':' $iface; iface=$var_
+	rx=$(($(index_ ' ' 1 $line) / 1024 / 1024))MiB
+	tx=$(($(index_ ' ' 9 $line) / 1024 / 1024))MiB
+	getip $iface 2>/dev/null | while read ip mask gw hw; do
+		echo "<tr>
+<td $class_>$iface</td>
+<td $class_>$ip</td>
+<td $class_>$hw</td>
+<td $class_>$rx</td>
+<td $class_>$tx</td>
+</tr>"
+	done
+done < /proc/net/dev
+
+echo '</table>
+</td>
+</tr>
+<tr><td><br></td></tr>
+</table>'
+
+. $cgi_/tail
