@@ -8,18 +8,15 @@ maxtags_=255
 
 export PATH=$PATH:$HOME/.deskd/sbin
 
-trace_()
-{
-	echo "$@" >&2
-}
+trace_() { echo "$@" >&2; }
 
 var_=''
 getvar__() { var_=$1; }
-getvar_() { local ifs=$IFS; IFS=$1; shift 1; getvar__ $@; IFS=$ifs; }
+getvar_() { local IFS=$1; shift 1; getvar__ $@; }
 
 val_=''
 getval__() { val_=$2; }
-getval_() { local ifs=$IFS; IFS=$1; shift 1; getval__ $@; IFS=$ifs; }
+getval_() { local IFS=$1; shift 1; getval__ $@; }
 
 index__()
 {
@@ -36,7 +33,7 @@ index__()
 	done
 }
 
-index_() { local ifs=$IFS; IFS=$1; shift 1; index__ $@; IFS=$ifs; }
+index_() { local IFS=$1; shift 1; index__ $@; }
 
 row_=0
 class_=''
@@ -53,7 +50,6 @@ alter_()
 getopt_()
 {
 	local name=$1
-	local ifs=$IFS
 
 	var_=''
 	val_=''
@@ -71,4 +67,4 @@ getopt_()
 
 str_=''
 split__() { while [ $# -ne 0 ]; do str_="$str_$1 "; shift 1; done; }
-split_() { local ifs=$IFS; IFS=$1; shift 1; split__ $@; IFS=$ifs; }
+split_() { local IFS=$1; shift 1; split__ $@; }

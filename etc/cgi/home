@@ -1,16 +1,5 @@
 #!/bin/sh
 
-mempct()
-{
-	free | while read name total used rest; do
-		if [ "$name" = "$1" ]; then
-			case $used in
-			[0-9]*) echo "$(($used * 100 / $total))";;
-			esac
-		fi
-	done
-}
-
 rxtx()
 {
 	while [ $# -ne 0 ]; do
@@ -70,12 +59,11 @@ echo "</span>
 <td class=info>units</td>
 </tr>"
 
-norm() { var=$1; val=$2; }
+pair() { var=$1; val=$2; }
 
 model=0
 models=''
 units=1
-ifs=$IFS
 IFS=':'
 while read var val; do
         case $var in
@@ -83,7 +71,7 @@ while read var val; do
                 eval "cpurow$model='<td>$val</td>'"
                 ;;
         "model"*)
-		IFS=$ifs; norm $var $val; IFS=':'
+		IFS=$ifs_; pair $var $val; IFS=':'
                 if [ "$model" = "$val" ]; then
                         units=$((units + 1))
                 else
@@ -107,7 +95,7 @@ for model in $models; do
 	fi
 	eval "echo '<tr>'\$cpurow$model'</tr>'"
 done
-IFS=$ifs
+IFS=$ifs_
 echo "</table>
 </td>
 </tr>
@@ -122,8 +110,18 @@ free | while read title total used free share cache available; do
 	echo -n "<tr>"
 	case $title in
 	total) class_="class=info"; pct=200;;
-	Mem:) pct=$(mempct "Mem:");;
-	Swap:) pct=$(mempct "Swap:");;
+	Mem:)
+		if [ -z "$total" -o $total -eq 0 ]; then
+			total=1
+		fi
+		pct=$(($used * 100 / $total));;
+	Swap:)
+		if [ -z "$total" -o $total -eq 0 ]; then
+			tmp=1
+		else
+			tmp=$total
+		fi
+		pct=$(($used * 100 / $tmp));;
 	-/+) continue;;
 	*) pct=100;;
 	esac
@@ -190,15 +188,8 @@ df -h | while read fs size used avail use rest; do
 	if [ $i -eq 1 ]; then
 		echo "<td $class_>$use</td>"
 	else
-		if [ -n "$use" ]; then
-			getvar_ '%' $use
-			pct=$var_
-		fi
-
-		if [ -z "$pct" ]; then
-			pct=0
-		fi
-
+		getvar_ '%' $use
+		pct=$var_
 		cur=$(($pct / 10))
 		ch=$((10 - cur))
 		if [ $ch -eq 10 ]; then
@@ -284,9 +275,9 @@ busybox top -n 1 -b | while read pid ppid user stat vsz vszpct cpu cpupct cmd; d
 	fi
 
 	if [ $list -gt 1 ]; then
-		ifs=$IFS; IFS='%'
+		IFS='%'
 		usagecolor $cpupct
-		IFS=$ifs
+		IFS=$ifs_
 		alter_
 		class_="$class_ $color"
 

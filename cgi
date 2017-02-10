@@ -1,5 +1,7 @@
 #!/bin/sh
 
+ifs_=$IFS
+
 . ./lib/libcgi
 . ./lib/libsym
 
@@ -161,7 +163,7 @@ case "$data" in
 	args=$(IFS='?'; getcmdargs_ $data)
 	trace_ "tagcfg cmd args: $args"
 	. ./lib/libyawm
-	ifs=$IFS; IFS='&'; modtags_ $args; IFS=$ifs
+	IFS='&'; modtags_ $args; IFS=$ifs_
 	. $cgi_/tagcfg > $tmp_/tagcfg.html
 	echo "$tmp_/tagcfg.html"
 	;;
