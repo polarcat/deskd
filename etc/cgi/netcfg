@@ -6,8 +6,8 @@ menu_="netcfg network"
 
 cd /sys/class/net/
 echo "<table class=blank>
-<tr><td class=para>${sym1_}setup</td></tr>
-<tr><td><br></td></tr>
+<tr><td class=para>setup</td></tr>
+<tr><td class=blank><br></td></tr>
 <tr>
 <td>
 <table class=legend>
@@ -20,7 +20,8 @@ echo "<table class=blank>
 <td class=info></td>
 <td class=info></td>
 <td class=info></td>
-</tr>"
+</tr>
+<tr><td class=blank><br></td></tr>"
 row_=0
 for iface in *; do
 	type=0
@@ -69,13 +70,11 @@ for iface in *; do
 	fi
 
 	echo "<td $class_>
-<a class=menu href=$temp_/$ifstatus>
-<div class=$devclass>$devicon&nbsp;&nbsp;$iface&nbsp;&nbsp;</div>
-</a>
+<a class=$devclass href=$temp_/$ifstatus>$devicon&nbsp;$iface&nbsp;</a>
 </td>
-<td $class_>$address_&nbsp;&nbsp;</td>
-<td $class_>$netmask_&nbsp;&nbsp;</td>
-<td $class_>$broadcast_&nbsp;&nbsp;</td>
+<td $class_>$address_&nbsp;</td>
+<td $class_>$netmask_&nbsp;</td>
+<td $class_>$broadcast_&nbsp;</td>
 <td $class_><input type=checkbox name=dhcp $checked disabled></td>
 <form action=cgi>
 <input type=hidden name=cmd value=ifcfg>
@@ -92,9 +91,7 @@ for iface in *; do
 </td>
 </form>
 <td $class_>
-<a class=menu href=$temp_/$wlstatus title=details>
-<div class=$devclass>$network_</div>
-</a>
+<a class=$devclass href=$temp_/$wlstatus title=details>$network_</a>
 </td>
 </tr>"
 done
@@ -102,13 +99,11 @@ done
 echo "</table>
 </td>
 </tr>
-<tr><td><br></td></tr>
+<tr><td class=blank><br></td></tr>
 <tr><td class=para>
-<a class=menu href=cgi?route title=details>
-<div class=para>${sym1_}route${sym3_}</div>
-</a>
+<a class=para href=cgi?route title=details>route${sym3_}</a>
 </td></tr>
-<tr><td><br></td></tr>
+<tr><td class=blank><br></td></tr>
 <tr>
 <td>
 <table class=legend>
@@ -117,7 +112,8 @@ echo "</table>
 <td class=info>destination</td>
 <td class=info>gateway</td>
 <td class=info>netmask</td>
-</tr>"
+</tr>
+<tr><td class=blank><br></td></tr>"
 
 row_=0
 route()
@@ -130,7 +126,7 @@ route()
 		devclass=offline
 	fi
 
-	echo "<td $class_><div class=$devclass>$devicon&nbsp;&nbsp;$1</div></td>"
+	echo "<td $class_><div class=$devclass>$devicon&nbsp;$1</div></td>"
 	hex2ip4_ $2
 	echo "<td $class_>$ip4addr_</td>"
 	hex2ip4_ $3
@@ -151,23 +147,22 @@ done < /proc/net/route
 echo "</table>
 </td>
 </tr>
-<tr><td><br></td></tr>
+<tr><td class=blank><br></td></tr>
 <tr><td class=para>
-<a class=menu href=cgi?netstat title=details>
-<div class=para>${sym1_}netstat${sym3_}</div>
-</a>
+<a class=para href=cgi?netstat title=details>netstat${sym3_}</a>
 </td></tr>
-<tr><td><br></td></tr>
+<tr><td class=blank><br></td></tr>
 <tr>
 <td>
 <table class=legend>
 <tr>
-<td class=info></td>
+<td class=info>interface</td>
 <td class=info>tcp addr</td>
 <td class=info>mac addr</td>
 <td class=info>received</td>
 <td class=info>transmitted</td>
-</tr>"
+</tr>
+<tr><td class=blank><br></td></tr>"
 row_=0
 IFS=$ifs_
 while read iface line; do
@@ -190,9 +185,21 @@ while read iface line; do
 	fi
 	tx=$((val_ / 1024 / 1024))MiB
 
+	if [ -d $iface/wireless ]; then
+		devicon='&#xf1eb'
+	else
+		devicon='&#xf0e8'
+	fi
+
+	if isconn_ $iface; then
+		devclass=online
+	else
+		devclass=offline
+	fi
+
 	getip $iface 2>/dev/null | while read ip mask gw hw; do
 		echo "<tr>
-<td $class_>$iface</td>
+<td $class_><span class=$devclass>$devicon&nbsp;$iface</span></td>
 <td $class_>$ip</td>
 <td $class_>$hw</td>
 <td $class_>$rx</td>
@@ -204,7 +211,7 @@ done < /proc/net/dev
 echo '</table>
 </td>
 </tr>
-<tr><td><br></td></tr>
+<tr><td class=blank><br></td></tr>
 </table>'
 
 . $cgi_/tail

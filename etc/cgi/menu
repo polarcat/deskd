@@ -1,19 +1,18 @@
 #!/bin/sh
 
-arg1=''
-arg2=''
+item='#'
 
-getopt() { arg1=$1; arg2=$2; }
+getopt() { item=$1; title_=$2; }
 getopt $menu_
 
-. $cgi_/head "$arg2"
+. $cgi_/head
 
 list="home:home
-|apps:apps
-|wincfg:wins
-|scrcfg:screens
-|tagcfg:tags
-|netcfg:network"
+apps:apps
+wincfg:wins
+scrcfg:screens
+tagcfg:tags
+netcfg:network"
 
 echo '</head>
 <body>
@@ -21,34 +20,35 @@ echo '</head>
 <div class=menu>
 <table class=blank>
 <tr>'
-if [ "$arg1" = "home" ]; then
+
+if [ "$item" = "home" ]; then
 	style='style=color:#444;'
 fi
-echo "<td class=blank>
+
+echo "<td class=home>
 <span>&nbsp;</span>
 <a class=home $style href=cgi?home>&#xf015;</a>
 <span>&nbsp;</span>
 </td>
 <td>
 <ul class=menu>"
-ifs=$IFS
-IFS='|'
+
 for item in $list; do
 	getvar_ ':' $item
-	tag=$var_
 	getval_ ':' $item
-	val=$val_
-	if [ "$tag" = "home" ]; then
+
+	if [ "$var_" = "home" ]; then
 		continue
 	fi
-	if [ "$arg1" = "$tag" -a "$tag" != "home" ]; then
+
+	if [ "$title_" = "$val_" -a "$var_" != "home" ]; then
 		class="active"
 	else
 		class="menu"
 	fi
-	echo "<li class=$class><a href=cgi?$tag>$val</a></li>"
+
+	echo "<li class=$class><a href=cgi?$var_>$val_</a></li>"
 done
-IFS=$ifs
 echo '</ul>
 </td>
 </tr>

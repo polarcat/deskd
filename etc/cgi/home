@@ -43,21 +43,22 @@ echo "</span>
 <table class=blank>
 <tr>
 <td>
-<tr><td><br></td></tr>
+<tr><td class=blank><br></td></tr>
 <tr><td><span class=mono>$(uptime)<br></span></td></tr>
 <tr><td><span class=mono>$(uname -a)<br></span></td></tr>
-<tr><td><br></td></tr>
-<tr><td class=para>${sym1_}system</td></tr>
-<tr><td><br></td></tr>
+<tr><td class=blank><br></td></tr>
+<tr><td class=para>cpu</td></tr>
+<tr><td class=blank><br></td></tr>
 <tr>
 <td>
 <table class=legend>
 <tr>
-<td class=info>cpu</td>
+<td class=info>model</td>
 <td class=info>MHz</td>
 <td class=info>cache</td>
 <td class=info>units</td>
-</tr>"
+</tr>
+<tr><td class=blank><br></td></tr>"
 
 pair() { var=$1; val=$2; }
 
@@ -99,92 +100,92 @@ IFS=$ifs_
 echo "</table>
 </td>
 </tr>
-<tr><td><br></td></tr>
-<tr><td class=para>${sym1_}memory</td></tr>
-<tr><td><br></td></tr>
+<tr><td class=blank><br></td></tr>
+<tr><td class=para>memory</td></tr>
+<tr><td class=blank><br></td></tr>
 <tr>
 <td>
 <table class=legend>"
 row_=0
+i=0
 free | while read title total used free share cache available; do
-	echo -n "<tr>"
-	case $title in
-	total) class_="class=info"; pct=200;;
-	Mem:)
-		if [ -z "$total" -o $total -eq 0 ]; then
-			total=1
+	i=$((i + 1))
+	if [ $i -eq 1 ]; then
+		echo -n "<tr>"
+		class_="class=info"
+		echo "<td $class_>type</td>
+<td $class_>use%</td>"
+	else
+		alter_
+
+		if [ "$title" != "Mem:" -a "$title" != "Swap:" ]; then
+			continue
 		fi
-		pct=$(($used * 100 / $total));;
-	Swap:)
+
 		if [ -z "$total" -o $total -eq 0 ]; then
 			tmp=1
 		else
 			tmp=$total
 		fi
-		pct=$(($used * 100 / $tmp));;
-	-/+) continue;;
-	*) pct=100;;
-	esac
 
-	if [ $pct -gt 100 ]; then # print title
-		class_="class=info"
-		echo "<td $class_></td>"
-	else
-		alter_
+		pct=$(($used * 100 / $tmp))
+		echo -n "<tr>"
 	fi
 
-	echo "<td $class_>$title</td>
-<td $class_>$total</td>
+	echo "<td $class_>$title</td>"
+
+	if [ $i -gt 1 ]; then
+		cur=$((pct / 10))
+		ch=$((10 - cur))
+
+		if [ $ch -eq 10 ]; then
+			ch=a
+		fi
+
+		bg="#$ch$ch$ch"
+		echo -n "<td $class_ style=color:$bg;>"
+		usage_ $cur
+		echo "&nbsp;$pct%</td>"
+	fi
+
+	echo "<td $class_>$total</td>
 <td $class_>$used</td>
 <td $class_>$free</td>
 <td $class_>$share</td>
 <td $class_>$cache</td>
-<td $class_>$available</td>"
-	if [ $pct -gt 100 ]; then # complete title
-		echo "</tr>"
-		continue
+<td $class_>$available</td>
+</tr>"
+	if [ $i -eq 1 ]; then
+		echo "<tr><td class=blank><br></td></tr>"
 	fi
-	cur=$((pct / 10))
-	ch=$((10 - cur))
-	if [ $ch -eq 10 ]; then
-		ch=a
-	fi
-	bg="#$ch$ch$ch"
-	echo -n "<td $class_ style=color:$bg;>"
-	n=0
-	while [ $n -lt $cur ]; do
-		echo -n "&#9632;"
-		n=$((n + 1))
-	done
-	while [ $cur -lt 10 ]; do
-		echo -n "&#9633;"
-		cur=$((cur + 1))
-	done
-	echo "&nbsp;$pct%</td></tr>"
 done
 echo "</table>
 </td>
 </tr>
-<tr><td><br></td></tr>
-<tr><td class=para>${sym1_}storage</td></tr>
-<tr><td><br></td></tr>
+<tr><td class=blank><br></td></tr>
+<tr><td class=para>storage</td></tr>
+<tr><td class=blank><br></td></tr>
 <tr>
 <td>
 <table class=legend>"
 row_=0
+i=0
 df -h | while read fs size used avail use rest; do
 	i=$((i + 1))
 	if [ $i -eq 1 ]; then
 		class_="class=info"
 	else
 		alter_
+		if [ -b $fs ]; then
+			fs="&#xf0a0;&nbsp;$fs"
+		else
+			fs="&nbsp;&nbsp;$fs"
+		fi
 	fi
+
 	echo "<tr>
-<td $class_>$fs</td>
-<td $class_>$size</td>
-<td $class_>$used</td>
-<td $class_>$avail</td>
-<td $class_>$rest</td>"
+<td $class_>$fs</td>"
+
 	if [ $i -eq 1 ]; then
 		echo "<td $class_>$use</td>"
 	else
@@ -197,23 +198,23 @@ df -h | while read fs size used avail use rest; do
 		fi
 		bg="#$ch$ch$ch"
 		echo -n "<td $class_ style=color:$bg;>"
-		n=0
-		while [ $n -lt $cur ]; do
-			echo -n "&#9632;"
-			n=$((n + 1))
-		done
-		while [ $cur -lt 10 ]; do
-			echo -n "&#9633;"
-			cur=$((cur + 1))
-		done
+		usage_ $cur
 		echo "&nbsp;$use</td>"
 	fi
-echo "</tr>"
+
+echo "<td $class_>$size</td>
+<td $class_>$used</td>
+<td $class_>$avail</td>
+<td $class_>$rest</td>
+</tr>"
+	if [ $i -eq 1 ]; then
+		echo "<tr><td class=blank><br></td></tr>"
+	fi
 done
 echo "</table>
-<tr><td><br></td></tr>
-<tr><td class=para>${sym1_}processes</td></tr>
-<tr><td><br></td></tr>
+<tr><td class=blank><br></td></tr>
+<tr><td class=para>system</td></tr>
+<tr><td class=blank><br></td></tr>
 </table>"
 
 color=''
@@ -264,7 +265,8 @@ busybox top -n 1 -b | while read pid ppid user stat vsz vszpct cpu cpupct cmd; d
 	fi
 
 	if [ "$pid" = "PID" ]; then
-		echo "<br><table class=legend>"
+		echo "<table class=legend>
+<tr><td class=blank><br></td></tr>"
 		class_="class=info"
 		list=1
 	elif [ "$pid" != "PID" -a $list -eq 0 ]; then
@@ -292,8 +294,8 @@ busybox top -n 1 -b | while read pid ppid user stat vsz vszpct cpu cpupct cmd; d
 		if [ $flag -eq 1 ]; then
 			vsz=$vszpct
 			vszpct=$cpupct
-			index_ 1 $cmd; cpupct=$val_
-			index_ 2 $cmd; cmd=$val_
+			first_ '%' $cmd; cpupct=$var_'%'; cmd=$val_
+			IFS="$ifs_"
 			flag=0
 		fi
 	fi
@@ -310,10 +312,13 @@ busybox top -n 1 -b | while read pid ppid user stat vsz vszpct cpu cpupct cmd; d
 		echo "<td $class_>$cpu</td>"
 	fi
 	echo "<td $class_>$cpupct</td>
-<td $class_>$cmd</td>"
+<td $class_>$cmd</td>
+</tr>"
+	if [ $list -eq 1 ]; then
+		echo "<tr><td class=blank><br></td></tr>"
+	fi
 	list=$((list + 1))
 done
-echo '</tr>
-</table>'
+echo '</table>'
 
 . $cgi_/tail

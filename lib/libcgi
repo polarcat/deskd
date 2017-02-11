@@ -12,11 +12,24 @@ trace_() { echo "$@" >&2; }
 
 var_=''
 getvar__() { var_=$1; }
-getvar_() { local IFS=$1; shift 1; getvar__ $@; }
+getvar_() { local IFS="$1"; shift 1; getvar__ $@; }
 
 val_=''
 getval__() { val_=$2; }
-getval_() { local IFS=$1; shift 1; getval__ $@; }
+getval_() { local IFS="$1"; shift 1; getval__ $@; }
+
+first__() { var_=$1; shift 1; val_="$@"; }
+second_()
+{
+	local res=''
+
+	while [ $# -ne 0 ]; do
+		res="$res$1 "
+		shift 1
+	done
+	val_="$res"
+}
+first_() { local IFS="$1"; shift 1; first__ $@; second_ $val_; }
 
 index__()
 {
@@ -37,7 +50,7 @@ index__()
 index_()
 {
 	if [ "$IFS" != "$ifs_" ]; then
-		IFS=$1
+		IFS="$1"
 		shift 1
 	fi
 	index__ $@
@@ -74,4 +87,20 @@ getopt_()
 
 str_=''
 split__() { while [ "$#" -ne 0 ]; do str_="$str_$1 "; shift 1; done; }
-split_() { local IFS=$1; shift 1; split__ $@; }
+split_() { local IFS="$1"; shift 1; split__ $@; }
+
+usage_()
+{
+	local n=0
+	local m=$1
+
+	while [ $n -lt $m ]; do
+		echo -n "&#9632;"
+		n=$((n + 1))
+	done
+
+	while [ $m -lt 10 ]; do
+		echo -n "&#9633;"
+		m=$((m + 1))
+	done
+}

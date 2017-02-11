@@ -1,7 +1,7 @@
 #!/bin/sh
 
-menu_="netcfg route"
-. $cgi_/menu "netcfg" "route"
+menu_="route network"
+. $cgi_/menu
 . $lib_/libnet
 
 head()
@@ -11,7 +11,8 @@ head()
 		echo "<td $class_>$1</td>"
 		shift 1
 	done
-	echo "</tr>"
+	echo "</tr>
+<tr><td class=blank><br></td></tr>"
 }
 
 route()
@@ -36,13 +37,13 @@ route()
 echo "<table class=blank>
 <tr>
 <td class=para>
-<a class=menu href=cgi?netcfg><div class=para>${sym4_}route</div></a>
+<a class=para href=cgi?netcfg>${sym4_}route</a>
 </td>
 </tr>
 <tr>
 <td>
 <table class=legend>
-<tr><td><br></td></tr>"
+<tr><td class=blank><br></td></tr>"
 row_=0
 while read line; do
 	case $line in

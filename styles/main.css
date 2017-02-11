@@ -93,22 +93,22 @@ a:link.selected {
 	font-family:helvetica,fontawesome;
 	color:#fff;
 	background-color:transparent;
-	text-decoration:none
+	text-decoration:none;
 }
 a:visited.selected {
 	color:#fff;
 	background-color:transparent;
-	text-decoration:none
+	text-decoration:none;
 }
 a:hover.selected {
 	color:#fff;
 	background-color:transparent;
-	text-decoration:none
+	text-decoration:none;
 }
 a:active.selected {
 	color:#fff;
 	background-color:transparent;
-	text-decoration:none
+	text-decoration:none;
 }
 a:link.home {
 	font-family:helvetica,fontawesome;
@@ -146,6 +146,33 @@ a:hover.menu {
 }
 a:active.menu {
 	border-bottom:1px solid #333;
+}
+a:link.offline {
+	font-family:mono,fontawesome;
+	background-color:transparent;
+	text-decoration:none;
+	padding-bottom:1px;
+	border:none;
+}
+a:link.online {
+	font-family:mono,fontawesome;
+	color:#568250;
+	background-color:transparent;
+	text-decoration:none;
+	padding-bottom:1px;
+	border:none;
+}
+a:link.para {
+	font-family:mono,fontawesome;
+	font-weight:bold;
+	background-color:transparent;
+	color:#4080e0;
+	text-decoration:none;
+	padding-bottom:1px;
+	border:none;
+}
+a:visited.para {
+	color:#000;
 }
 a:link.plain {
 	color:#333;
@@ -185,7 +212,7 @@ a:active.symbol {
 	font-family:fontawesome;
 	color:#333;
 	background-color:transparent;
-	text-decoration:none
+	text-decoration:none;
 }
 table {
 	border:0;
@@ -237,7 +264,13 @@ td.mono {
 	font-family:mono,fontawesome;
 	color:#222;
 }
+td.home {
+	text-align:center;
+	border:0;
+	color:transparent;
+}
 td.blank {
+	font-size:8px;
 	text-align:center;
 	border:0;
 	color:transparent;
@@ -256,10 +289,10 @@ td.bgleft {
 }
 td.info {
 	font-family:helvetica,fontawesome;
-	padding:2px 4px 8px 4px;
+	padding:2px 4px 2px 4px;
 	border:0 transparent;
 	color:#777;
-	background-color:#f7f7f7;
+	background-color:#f0f0f0;
 	text-align:left;
 	font-size:100%;
 }
@@ -268,18 +301,19 @@ td.pad {
 	padding:1px 8px 1px 8px;
 	text-align:left;
 }
-.para {
+td.para0 {
 	font-family:mono,fontawesome;
 	font-weight:bold;
-	background-color:#ddd;
-	color:#444;
+	color:#333;
+	background-color:#b8e0f0;
+	padding:2px 2px 4px 6px;
 }
 td.para {
 	font-family:mono,fontawesome;
 	font-weight:bold;
-	background-color:#ddd;
-	color:#444;
-	padding:2px 2px 4px 2px;
+	color:#000;
+	background-color:#ccc;
+	padding:2px 2px 4px 6px;
 }
 td.even {
 	font-family:mono,fontawesome;
@@ -590,12 +624,11 @@ example:
 	visibility:visible;
 }
 .online {
-	font-family:helvetica,fontawesome;
-	font-weight:bold;
+	font-family:mono,fontawesome;
 	color:#568250;
 }
 .offline {
-	font-family:helvetica,fontawesome;
+	font-family:mono,fontawesome;
 	color:#333;
 }
 .mono {

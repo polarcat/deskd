@@ -19,9 +19,9 @@ alter_
 echo "
 <table class=blank>
 <tr><td class=para>
-<a class=menu href=cgi?netcfg><div class=para>${sym4_}edit</div></a>
+<a class=para href=cgi?netcfg>${sym4_}edit</a>
 </td></tr>
-<tr><td><br></td></tr>
+<tr><td class=blank><br></td></tr>
 <tr>
 <td>
 <table class=legend>
@@ -34,7 +34,8 @@ echo "
 <td class=info></td>
 <td class=info></td>
 <td class=info></td>
-</tr>"
+</tr>
+<tr><td class=blank><br></td></tr>"
 
 getconf_ $iface
 
@@ -61,16 +62,16 @@ else
 	checked=''
 fi
 
-selstyle="style=font-family:helvetica,fontawesome;"
+selstyle="style=font-family:mono,fontawesome;"
 
 if isconn_ $iface; then
-	selstyle=$selstyle"color:#568250;font-weight:bold;"
+	selstyle=$selstyle"color:#568250;"
 else
 	selstyle=$selstyle"color:#333;"
 fi
 
 echo "<tr>
-<td $class_><span $selstyle>$devicon&nbsp;&nbsp;$iface</span></td>
+<td $class_><span $selstyle>$devicon&nbsp;$iface</span></td>
 <form action=cgi>
 <input type=hidden name=cmd value=ifsave>
 <input type=hidden name=dev value=$iface>
