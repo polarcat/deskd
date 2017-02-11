@@ -23,7 +23,7 @@ setup()
 	fi
 	chmod 0600 configs/"$1".conf
 
-	echo "ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=wheel" > $cur
+	echo "ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev" > $cur
 	chmod 0600 $cur
 	cat configs/$1.conf >> $cur
 	for conf in configs/*.conf; do
