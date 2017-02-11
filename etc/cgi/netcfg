@@ -169,6 +169,7 @@ echo "</table>
 <td class=info>transmitted</td>
 </tr>"
 row_=0
+IFS=$ifs_
 while read iface line; do
 	case $iface in
 	Inter-*|*face*) continue;;
@@ -176,8 +177,19 @@ while read iface line; do
 
 	alter_
 	getvar_ ':' $iface; iface=$var_
-	rx=$(($(index_ ' ' 1 $line) / 1024 / 1024))MiB
-	tx=$(($(index_ ' ' 9 $line) / 1024 / 1024))MiB
+
+	index_ 1 $line
+	if [ -z "$val_" ]; then
+		val_=0
+	fi
+	rx=$((val_ / 1024 / 1024))MiB
+
+	index_ 9 $line
+	if [ -z "$val_" ]; then
+		val_=0
+	fi
+	tx=$((val_ / 1024 / 1024))MiB
+
 	getip $iface 2>/dev/null | while read ip mask gw hw; do
 		echo "<tr>
 <td $class_>$iface</td>

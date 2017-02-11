@@ -292,8 +292,8 @@ busybox top -n 1 -b | while read pid ppid user stat vsz vszpct cpu cpupct cmd; d
 		if [ $flag -eq 1 ]; then
 			vsz=$vszpct
 			vszpct=$cpupct
-			cpupct=$(index_ ' ' 1 $cmd)
-			cmd=$(index_ ' ' 2 $cmd)
+			index_ 1 $cmd; cpupct=$val_
+			index_ 2 $cmd; cmd=$val_
 			flag=0
 		fi
 	fi

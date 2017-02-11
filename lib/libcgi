@@ -23,17 +23,25 @@ index__()
 	local n="$1"
 	local i=0
 	shift 1
-	while [ $# -ne 0 ]; do
+	while [ "$#" -ne 0 ]; do
 		i=$((i + 1))
-		if [ $i -eq $n ]; then
-			echo $1
-			break
+		if [ "$i" -eq "$n" ]; then
+			val_=$1
+			return
 		fi
 		shift 1
 	done
+	val_=''
 }
 
-index_() { local IFS=$1; shift 1; index__ $@; }
+index_()
+{
+	if [ "$IFS" != "$ifs_" ]; then
+		IFS=$1
+		shift 1
+	fi
+	index__ $@
+}
 
 row_=0
 class_=''
@@ -51,10 +59,8 @@ getopt_()
 {
 	local name=$1
 
-	var_=''
-	val_=''
 	shift 1
-	while [ $# -ne 0 ]; do
+	while [ "$#" -ne 0 ]; do
 		getvar_ '=' $1
 		getval_ '=' $1
 		if [ "$var_" = "$name" ]; then
@@ -62,9 +68,10 @@ getopt_()
 		fi
 		shift 1
 	done
+	var_=''
 	val_=''
 }
 
 str_=''
-split__() { while [ $# -ne 0 ]; do str_="$str_$1 "; shift 1; done; }
+split__() { while [ "$#" -ne 0 ]; do str_="$str_$1 "; shift 1; done; }
 split_() { local IFS=$1; shift 1; split__ $@; }
