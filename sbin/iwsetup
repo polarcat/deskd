@@ -25,7 +25,15 @@ setup()
 
 	echo "ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev" > $cur
 	chmod 0600 $cur
-	cat configs/$1.conf >> $cur
+
+	cat configs/$1.conf | while read line; do
+		case $line in
+		*ssid=*) printf "\tpriority=1\n\t$line\n";;
+		'}'*|network='{'*) echo "$line";;
+		*) printf "\t$line\n";;
+		esac
+	done >> $cur
+
 	for conf in configs/*.conf; do
 		if [ "$conf" = "configs/$1.conf" ]; then
 			continue
