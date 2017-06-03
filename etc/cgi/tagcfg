@@ -3,8 +3,11 @@
 menu_="tagcfg tags"
 . $cgi_/menu
 
+pwd_=$PWD
+dir_=$HOME/.yawm/screens
+cd $dir_
 echo "<table class=blank>"
-for scr in $(ls -1 ~/.yawm); do
+for scr in *; do
         case "$scr" in
         [0-9])
 	echo "<form action=cgi>
@@ -14,8 +17,8 @@ for scr in $(ls -1 ~/.yawm); do
 <tr><td><br></td></tr>
 <tr><td>
 <table class=legend style=border-spacing:4px;>"
-	for i in $(ls -1 $yawm_/$scr/tags/); do
-		tag=$(cat $yawm_/$scr/tags/$i/.name)
+	for i in $scr/tags/*; do
+		read tag < $i/.name
 		echo "<tr>
 <td>
 <div class=input>
@@ -46,5 +49,6 @@ for scr in $(ls -1 ~/.yawm); do
 	esac
 done
 echo '</table>'
+cd $pwd_
 
 . $cgi_/tail
