@@ -9,6 +9,39 @@ image=''
 w=24
 h=24
 
+ctl_=$HOME/.yawm/.control
+cli_=$HOME/.yawm/clients
+
+echo list-clients > $ctl_
+
+while read var val; do
+	case "$var" in
+	seq*) seq=$val;;
+	esac
+done < $cli_
+
+echo list-clients > $ctl_
+
+found=0
+count=0
+while :; do
+	while read var val; do
+		case "$var" in
+		seq*)
+			if [ "$seq" != "$val" ]; then
+				found=1
+				break
+			fi
+			;;
+		esac
+	done < $cli_
+	if [ $found -eq 1 -o $count -gt 500 ]; then
+		break
+	fi
+	count=$((count + 1))
+	sleep 0.1
+done
+
 echo "<table class=blank>
 <tr>
 <td class=info style=text-align:center;>&#xf057;&nbsp;</td>
@@ -17,8 +50,11 @@ echo "<table class=blank>
 <td class=info>process</td>
 <td class=info>window</td>
 </tr>"
-wmctrl -l -p | sort |
-while read wid desktop pid user name; do
+while read scr tag win status pid title; do
+	case $scr in
+	seq*) continue;;
+	esac
+
 	i=$((i + 1))
 	if [ $((i % 2)) -eq 0 ]; then
 		style=''
@@ -32,7 +68,7 @@ while read wid desktop pid user name; do
 		while read val; do cmd=$val; done < /proc/$pid/comm
 	fi
 
-	icon=$(xprop -id $wid | grep -E "^WM_CLASS.*=" | cut -f2 -d'"')
+	icon=$(xprop -id $win | grep -E "^WM_CLASS.*=" | cut -f2 -d'"')
 	case "$icon" in
 	*[Tt]erm*) glyph="[&#xf120;";;
 	[Cc][Pp][Uu]*|*[Mm]on*) glyph="&#xf1fe;";;
@@ -45,14 +81,14 @@ while read wid desktop pid user name; do
 	esac
 	echo "<tr $style>
 <td>
-<a class=symbol style=color:#DE5958; href=cgi?close=$wid>&#xf00d;&nbsp;</a>
+<a class=symbol style=color:#DE5958; href=cgi?close=$win>&#xf00d;&nbsp;</a>
 </td>
 <td class=pad>
 <form action=cgi? method=get>
-<button class=framed title=show window type=submit name=close value=$wid>
+<button class=framed title=show window type=submit name=close value=$win>
 <table class=button>
 <tr>
-<td class=pad>$glyph&nbsp;&nbsp;$name</td>
+<td class=pad>$glyph&nbsp;&nbsp;$title</td>
 </tr>
 </table>
 </button>
@@ -60,9 +96,9 @@ while read wid desktop pid user name; do
 </td>
 <td class=pad title=command>$cmd</td>
 <td class=pad><a href=cgi?pidinfo=$pid title='show details'>$pid</a></td>
-<td class=pad><a href=cgi?wininfo=$wid title='show details'>$wid</a></td>
+<td class=pad><a href=cgi?wininfo=$win title='show details'>$win</a></td>
 </tr>"
-done
+done < $cli_
 echo '</table>'
 
 . $cgi_/tail
