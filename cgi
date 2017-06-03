@@ -71,11 +71,6 @@ case "$data" in
 
 	if [ -n "$val_" ]; then
 		xdotool windowkill $val_
-		for i in $(seq 1 5000); do
-			if ! xwininfo -id $val_; then
-				break
-			fi
-		done
 	fi
 	. $cgi_/wincfg > $tmp_/wins.html
 	echo "$tmp_/wins.html"
